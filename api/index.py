@@ -115,8 +115,9 @@ def process_invoice():
         # Extract invoice data with OCR API key (no vendor list needed)
         result = extract_invoice_data(temp_path, None, OCR_API_KEY)
         
-        # Add extraction method info
-        extraction_method = 'ai' if os.environ.get('GEMINI_API_KEY') else 'regex'
+        # Determine actual extraction method used
+        ai_used = result.get('_ai_used', False)
+        extraction_method = 'ai' if ai_used else 'regex'
         
         # Clean up temporary file
         try:

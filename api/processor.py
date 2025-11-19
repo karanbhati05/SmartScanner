@@ -45,6 +45,7 @@ def extract_invoice_data(image_path, known_vendors=None, ocr_api_key=None):
     # Try AI-powered extraction first
     ai_result = extract_with_ai(raw_text)
     if ai_result:
+        ai_result['_ai_used'] = True
         return ai_result
     
     # Fallback to regex-based extraction
@@ -60,7 +61,8 @@ def extract_invoice_data(image_path, known_vendors=None, ocr_api_key=None):
         'tax': None,
         'subtotal': None,
         'summary': None,
-        'line_items': []
+        'line_items': [],
+        '_ai_used': False
     }
 
 
@@ -78,7 +80,10 @@ def extract_with_ai(text):
         # Get Gemini API key from environment
         api_key = os.environ.get('GEMINI_API_KEY')
         if not api_key:
+            print("No GEMINI_API_KEY found, using fallback")
             return None  # Fallback to regex if no API key
+        
+        print(f"Using Gemini AI with key: {api_key[:10]}...")
         
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
         
@@ -126,36 +131,48 @@ If you cannot find a field, use null. Keep currency symbols with amounts. For li
             }
         }
         
+        print("Calling Gemini API...")
         response = requests.post(url, json=payload, timeout=15)
         
-        if response.status_code == 200:
-            result = response.json()
-            
-            # Extract the generated text
-            if 'candidates' in result and len(result['candidates']) > 0:
-                generated_text = result['candidates'][0]['content']['parts'][0]['text']
-                
-                # Parse JSON from response
-                # Remove markdown code blocks if present
-                generated_text = generated_text.replace('```json', '').replace('```', '').strip()
-                
-                data = json.loads(generated_text)
-                
-                return {
-                    'vendor': data.get('vendor'),
-                    'date': data.get('date'),
-                    'total': data.get('total'),
-                    'invoice_number': data.get('invoice_number'),
-                    'tax': data.get('tax'),
-                    'subtotal': data.get('subtotal'),
-                    'summary': data.get('summary'),
-                    'line_items': data.get('line_items', [])
-                }
+        print(f"Gemini API Status: {response.status_code}")
         
+        if response.status_code != 200:
+            print(f"Gemini API Error: {response.text}")
+            return None
+        
+        result = response.json()
+        print(f"Gemini response received: {result}")
+        
+        # Extract the generated text
+        if 'candidates' in result and len(result['candidates']) > 0:
+            generated_text = result['candidates'][0]['content']['parts'][0]['text']
+            print(f"Generated text: {generated_text}")
+            
+            # Parse JSON from response
+            # Remove markdown code blocks if present
+            generated_text = generated_text.replace('```json', '').replace('```', '').strip()
+            
+            data = json.loads(generated_text)
+            print(f"Parsed data: {data}")
+            
+            return {
+                'vendor': data.get('vendor'),
+                'date': data.get('date'),
+                'total': data.get('total'),
+                'invoice_number': data.get('invoice_number'),
+                'tax': data.get('tax'),
+                'subtotal': data.get('subtotal'),
+                'summary': data.get('summary'),
+                'line_items': data.get('line_items', [])
+            }
+        
+        print("No candidates in Gemini response")
         return None
         
     except Exception as e:
-        print(f"AI extraction failed: {e}")
+        print(f"AI extraction failed with exception: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
