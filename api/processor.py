@@ -24,22 +24,45 @@ def extract_invoice_data(image_path, known_vendors=None, ocr_api_key=None):
     # Get API key from parameter or environment variable
     api_key = ocr_api_key or os.environ.get('OCR_API_KEY', 'K87899142388957')
     
-    # Perform OCR on the image using OCR.space API
+    # Perform OCR on the image with multiple fallback options
+    raw_text = None
+    ocr_error = None
+    
     try:
         raw_text = perform_ocr(image_path, api_key)
-        if not raw_text:
+    except Exception as e:
+        print(f"Primary OCR failed: {str(e)}")
+        ocr_error = str(e)
+        
+        # Try fallback OCR methods
+        try:
+            print("Attempting Tesseract OCR fallback...")
+            raw_text = perform_tesseract_ocr(image_path)
+        except Exception as e2:
+            print(f"Tesseract OCR also failed: {str(e2)}")
+            
+            # If both OCR methods fail, check if we can use Gemini Vision directly
+            gemini_key = os.environ.get('GEMINI_API_KEY')
+            if gemini_key:
+                print("Attempting Gemini Vision API as final fallback...")
+                try:
+                    return extract_with_gemini_vision(image_path, gemini_key)
+                except Exception as e3:
+                    print(f"Gemini Vision also failed: {str(e3)}")
+            
             return {
                 'vendor': None,
                 'date': None,
                 'total': None,
-                'error': 'OCR failed: No text extracted'
+                'error': f'All OCR methods failed. Primary: {ocr_error}'
             }
-    except Exception as e:
+    
+    if not raw_text:
         return {
             'vendor': None,
             'date': None,
             'total': None,
-            'error': f'OCR failed: {str(e)}'
+            'error': 'OCR failed: No text extracted from image'
         }
     
     # Try AI-powered extraction first
@@ -217,8 +240,8 @@ def perform_ocr(image_path, api_key):
     url = 'https://api.ocr.space/parse/image'
     
     # Configure timeouts: (connect timeout, read timeout)
-    timeout = (10, 30)  # 10s to connect, 30s to read response
-    max_retries = 2
+    timeout = (8, 25)  # 8s to connect, 25s to read response
+    max_retries = 3  # Try 3 times before giving up
     
     for attempt in range(max_retries):
         try:
@@ -257,7 +280,7 @@ def perform_ocr(image_path, api_key):
         except requests.exceptions.Timeout as e:
             print(f"⚠️ OCR timeout on attempt {attempt + 1}: {str(e)}")
             if attempt == max_retries - 1:
-                raise Exception(f"OCR request timed out after {max_retries} attempts. The OCR service may be slow or unavailable.")
+                raise Exception(f"OCR.space service is not responding (timed out after {max_retries} attempts). Trying alternative methods...")
             continue
             
         except requests.exceptions.ConnectionError as e:
@@ -271,6 +294,136 @@ def perform_ocr(image_path, api_key):
             raise Exception(f"OCR request failed: {str(e)}")
     
     return None
+
+
+def perform_tesseract_ocr(image_path):
+    """
+    Fallback OCR using pytesseract (if available).
+    
+    Args:
+        image_path (str): Path to the image file
+    
+    Returns:
+        str: Extracted text from the image
+    """
+    try:
+        import pytesseract
+        from PIL import Image
+        
+        img = Image.open(image_path)
+        text = pytesseract.image_to_string(img)
+        print(f"✅ Tesseract OCR extracted {len(text)} characters")
+        return text
+    except ImportError:
+        print("⚠️ pytesseract not available (not installed in serverless environment)")
+        raise Exception("Tesseract OCR not available")
+    except Exception as e:
+        print(f"⚠️ Tesseract OCR failed: {str(e)}")
+        raise
+
+
+def extract_with_gemini_vision(image_path, api_key):
+    """
+    Use Gemini Vision API to extract invoice data directly from image.
+    This bypasses OCR entirely and uses Gemini's multimodal capabilities.
+    
+    Args:
+        image_path (str): Path to the image file
+        api_key (str): Gemini API key
+    
+    Returns:
+        dict: Extracted invoice data
+    """
+    try:
+        import base64
+        
+        # Read and encode image
+        with open(image_path, 'rb') as f:
+            image_data = base64.b64encode(f.read()).decode('utf-8')
+        
+        # Determine mime type
+        ext = image_path.lower().split('.')[-1]
+        mime_types = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp'
+        }
+        mime_type = mime_types.get(ext, 'image/jpeg')
+        
+        model = "gemini-2.0-flash"
+        url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
+        
+        prompt = """Extract the following invoice information from this image and return ONLY valid JSON:
+
+{
+  "vendor": "company name",
+  "invoice_number": "invoice number",
+  "date": "invoice date in YYYY-MM-DD format",
+  "subtotal": "subtotal amount",
+  "tax": "tax amount", 
+  "total": "total amount",
+  "summary": "brief description",
+  "line_items": [
+    {"description": "item name", "quantity": "qty", "price": "price"}
+  ]
+}
+
+Return null for any fields you cannot find. Be accurate and precise."""
+
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": prompt},
+                    {
+                        "inline_data": {
+                            "mime_type": mime_type,
+                            "data": image_data
+                        }
+                    }
+                ]
+            }],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": 2048
+            }
+        }
+        
+        print("Sending image to Gemini Vision API...")
+        response = requests.post(url, json=payload, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"Gemini Vision API Error: {response.text}")
+            raise Exception(f"Gemini Vision API returned status {response.status_code}")
+        
+        result = response.json()
+        
+        if 'candidates' in result and len(result['candidates']) > 0:
+            generated_text = result['candidates'][0]['content']['parts'][0]['text']
+            generated_text = generated_text.replace('```json', '').replace('```', '').strip()
+            
+            data = json.loads(generated_text)
+            print(f"✅ Gemini Vision extraction successful!")
+            
+            return {
+                'vendor': data.get('vendor'),
+                'date': data.get('date'),
+                'total': data.get('total'),
+                'invoice_number': data.get('invoice_number'),
+                'tax': data.get('tax'),
+                'subtotal': data.get('subtotal'),
+                'summary': data.get('summary'),
+                'line_items': data.get('line_items', []),
+                '_ai_used': True,
+                '_method': 'gemini_vision'
+            }
+        
+        raise Exception("No valid response from Gemini Vision")
+        
+    except Exception as e:
+        print(f"Gemini Vision extraction failed: {str(e)}")
+        raise
 
 
 def extract_vendor(text, known_vendors):
