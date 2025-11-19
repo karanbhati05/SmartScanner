@@ -706,27 +706,6 @@
             table += `Tax Amount\t\t${d.tax || 'Not Available'}\n`;
             table += `\nTOTAL AMOUNT\t\t${d.total || 'Not Available'}\n`;
             
-            if (d.summary) {
-                table += '\n═══════════════════════════════════════════════════════════════════\n';
-                table += 'SUMMARY\n';
-                table += '───────────────────────────────────────────────────────────────────\n';
-                table += d.summary + '\n';
-            }
-            
-            if (d.line_items && d.line_items.length > 0) {
-                table += '\n═══════════════════════════════════════════════════════════════════\n';
-                table += 'LINE ITEMS\n';
-                table += '───────────────────────────────────────────────────────────────────\n';
-                table += '#\tDescription\t\t\tQuantity\tPrice\n';
-                table += '───────────────────────────────────────────────────────────────────\n';
-                d.line_items.forEach((item, i) => {
-                    const desc = (item.description || 'Item').substring(0, 45);
-                    const qty = item.quantity || '-';
-                    const price = item.price || '-';
-                    table += `${i + 1}\t${desc}\t${qty}\t${price}\n`;
-                });
-            }
-            
             copyToClipboard(table);
                 });
             }
@@ -802,45 +781,8 @@
         <tr class="total-row">
             <td class="field-col">TOTAL AMOUNT</td>
             <td class="value-col">${d.total || 'Not Available'}</td>
-        </tr>`;
-            
-            if (d.summary) {
-                html += `
-        <tr>
-            <td class="field-col">Summary</td>
-            <td class="value-col">${d.summary}</td>
-        </tr>`;
-            }
-            
-            html += `
+        </tr>
     </table>`;
-            
-            if (d.line_items && d.line_items.length > 0) {
-                html += `
-    <div class="section-title">LINE ITEMS</div>
-    <table style="margin-top: 0; border-radius: 0 0 4px 4px;">
-        <tr class="line-item-header">
-            <th style="width: 8%; text-align: center; padding: 16px;">#</th>
-            <th style="width: 52%; padding: 16px;">Description</th>
-            <th style="width: 18%; text-align: center; padding: 16px;">Quantity</th>
-            <th style="width: 22%; text-align: right; padding: 16px;">Price</th>
-        </tr>`;
-                
-                d.line_items.forEach((item, i) => {
-                    const bgColor = i % 2 === 0 ? '#ffffff' : '#f5f7ff';
-                    const borderColor = i === d.line_items.length - 1 ? '#667eea' : '#e0e0e0';
-                    html += `
-        <tr>
-            <td style="background-color: ${bgColor}; text-align: center; font-weight: 700; color: #667eea; border-bottom: 1px solid ${borderColor};">${i + 1}</td>
-            <td style="background-color: ${bgColor}; border-bottom: 1px solid ${borderColor};">${item.description || 'Item'}</td>
-            <td style="background-color: ${bgColor}; text-align: center; color: #666; border-bottom: 1px solid ${borderColor};">${item.quantity || '-'}</td>
-            <td style="background-color: ${bgColor}; text-align: right; font-weight: 600; color: #333; border-bottom: 1px solid ${borderColor};">${item.price || '-'}</td>
-        </tr>`;
-                });
-                
-                html += `
-    </table>`;
-            }
             
             html += `
 </body>
