@@ -3,23 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartScanner - Enterprise Invoice Processing</title>
+    <title>Invoice Processing API - Demo</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #667eea;
-            --primary-dark: #5568d3;
-            --secondary: #764ba2;
-            --accent: #f093fb;
-            --success: #4caf50;
-            --warning: #ff9800;
-            --error: #f44336;
-            --bg-gradient: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
         }
 
         @keyframes gradientShift {
@@ -28,1243 +17,1073 @@
             100% { background-position: 0% 50%; }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.4), 0 0 40px rgba(118, 75, 162, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.6), 0 0 80px rgba(118, 75, 162, 0.4); }
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-gradient);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
-            padding: 20px;
-        }
-
-        /* Navigation */
-        .navbar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            padding: 15px 30px;
-            border-radius: 20px;
-            margin-bottom: 30px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .user-menu {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex;
-            align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-logout {
-            padding: 8px 20px;
-            background: rgba(244, 67, 54, 0.1);
-            color: var(--error);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: var(--error);
-            color: white;
-        }
-
-        /* Main Container */
-        .main-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 30px;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 30px;
-            height: fit-content;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar h3 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 800;
-            color: var(--primary);
-            margin-top: 5px;
-        }
-
-        .vendor-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .vendor-item {
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.02);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-        }
-
-        .vendor-name {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .vendor-count {
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        /* Main Content */
-        .content {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .tab {
-            padding: 12px 24px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
+            padding: 20px;
             position: relative;
+            overflow-x: hidden;
         }
 
-        .tab.active {
-            color: var(--primary);
-        }
-
-        .tab.active::after {
+        body::before {
             content: '';
             position: absolute;
-            bottom: -2px;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3), 
+                        0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+            max-width: 650px;
+            width: 100%;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
             left: 0;
             right: 0;
-            height: 2px;
-            background: var(--primary);
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 200% 100%;
+            animation: gradientShift 3s linear infinite;
+            border-radius: 30px 30px 0 0;
         }
 
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.5s;
+        h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+            position: relative;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
         }
 
-        .tab-content.active {
-            display: block;
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
         }
 
-        /* Batch Upload Area */
-        .batch-upload-area {
-            border: 3px dashed rgba(102, 126, 234, 0.3);
+        .subtitle {
+            color: #666;
+            font-size: 15px;
+            margin-top: 16px;
+            font-weight: 500;
+            opacity: 0.8;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed transparent;
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(135deg, #667eea, #764ba2, #f093fb) border-box;
             border-radius: 20px;
-            padding: 60px 40px;
+            padding: 50px 40px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
         }
 
-        .batch-upload-area:hover {
-            border-color: var(--primary);
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1), transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+            border-radius: 50%;
+        }
+
+        .upload-area:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .upload-area:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.25);
+        }
+
+        .upload-area.dragover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05)) padding-box,
+                        linear-gradient(135deg, #667eea, #764ba2, #f093fb) border-box;
+            transform: scale(1.02);
+            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.3);
         }
 
         .upload-icon {
             font-size: 64px;
             margin-bottom: 20px;
+            display: inline-block;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
         }
 
-        /* File Queue */
-        .file-queue {
-            margin-top: 30px;
-            max-height: 400px;
-            overflow-y: auto;
+        .upload-area:hover .upload-icon {
+            transform: scale(1.1) rotateZ(5deg);
         }
 
-        .file-queue-item {
-            display: grid;
-            grid-template-columns: auto 1fr auto auto auto;
-            gap: 15px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.02);
-            border-radius: 12px;
+        .upload-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
-            align-items: center;
         }
 
-        .file-preview {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            object-fit: cover;
-            background: #f5f5f5;
+        .upload-hint {
+            font-size: 14px;
+            color: #888;
+            font-weight: 500;
         }
 
-        .file-details {
-            flex: 1;
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: none;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .file-info.show {
+            display: block;
         }
 
         .file-name {
-            font-weight: 600;
             color: #333;
-            margin-bottom: 4px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 16px;
         }
 
         .file-size {
+            color: #666;
             font-size: 12px;
-            color: #999;
         }
 
-        .file-status {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .file-status.pending {
-            background: rgba(255, 152, 0, 0.1);
-            color: var(--warning);
-        }
-
-        .file-status.processing {
-            background: rgba(33, 150, 243, 0.1);
-            color: #2196f3;
-        }
-
-        .file-status.completed {
-            background: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-
-        .file-status.error {
-            background: rgba(244, 67, 54, 0.1);
-            color: var(--error);
-        }
-
-        .file-actions button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-remove {
-            background: rgba(244, 67, 54, 0.1);
-            color: var(--error);
-        }
-
-        .btn-remove:hover {
-            background: var(--error);
+        .process-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-        }
-
-        /* Progress Bar */
-        .batch-progress {
-            margin-top: 20px;
-            padding: 20px;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            border-radius: 15px;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+            position: relative;
             overflow: hidden;
+            letter-spacing: 0.5px;
         }
 
-        .progress-fill {
+        .process-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            transition: width 0.5s;
-            border-radius: 10px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
         }
 
-        /* Results Grid */
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+        .process-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .process-btn.show {
+            display: block;
+        }
+
+        .process-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5);
+        }
+
+        .process-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .process-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .spinner::before,
+        .spinner::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .spinner::before {
+            width: 50px;
+            height: 50px;
+            border: 4px solid transparent;
+            border-top-color: #667eea;
+            border-right-color: #764ba2;
+            animation: spin 1s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+        }
+
+        .spinner::after {
+            width: 38px;
+            height: 38px;
+            top: 6px;
+            left: 6px;
+            border: 4px solid transparent;
+            border-bottom-color: #f093fb;
+            border-left-color: #4facfe;
+            animation: spin 0.7s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite reverse;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .results {
+            display: none;
             margin-top: 30px;
         }
 
-        .result-card {
-            background: white;
-            border-radius: 15px;
+        .results.show {
+            display: block;
+        }
+
+        .results-title {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .result-item {
+            background: rgba(255, 255, 255, 0.9);
             padding: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .result-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            border-color: var(--primary);
-        }
-
-        .result-card.has-warning {
-            border-color: var(--warning);
-        }
-
-        .result-card.has-error {
-            border-color: var(--error);
-        }
-
-        .result-header {
+            border-radius: 15px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .validation-badges {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
+        .result-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        .badge {
-            padding: 4px 10px;
-            border-radius: 12px;
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        .result-item:hover::before {
+            opacity: 1;
+        }
+
+        .result-label {
             font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .badge.duplicate {
-            background: rgba(255, 152, 0, 0.1);
-            color: var(--warning);
-        }
-
-        .badge.tax-error {
-            background: rgba(244, 67, 54, 0.1);
-            color: var(--error);
-        }
-
-        .badge.verified {
-            background: rgba(76, 175, 80, 0.1);
-            color: var(--success);
-        }
-
-        .result-field {
-            margin-bottom: 12px;
-        }
-
-        .field-label {
-            font-size: 11px;
-            color: #999;
+            color: #888;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 4px;
         }
 
-        .field-value {
-            font-weight: 600;
+        .result-value {
             color: #333;
-            font-size: 14px;
+            font-size: 19px;
+            font-weight: 700;
         }
 
-        .currency-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: rgba(102, 126, 234, 0.1);
-            color: var(--primary);
-            border-radius: 8px;
-            font-size: 10px;
-            margin-left: 5px;
+        .result-value.empty {
+            color: #999;
+            font-style: italic;
+            font-weight: 400;
         }
 
-        /* Smart Preview Modal */
-        .modal {
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error {
+            background: linear-gradient(135deg, rgba(255, 77, 77, 0.1), rgba(255, 100, 100, 0.1));
+            border: 2px solid rgba(255, 77, 77, 0.3);
+            border-radius: 12px;
+            color: #d32f2f;
+            font-weight: 600;
+            padding: 18px 20px;
+            margin-top: 20px;
             display: none;
-            position: fixed;
+            animation: shake 0.5s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .export-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .export-btn {
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-btn::before {
+            content: '';
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
         }
 
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .export-btn:hover::before {
+            opacity: 1;
         }
 
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            max-width: 1200px;
-            width: 100%;
-            max-height: 90vh;
-            overflow: hidden;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            animation: fadeIn 0.3s;
+        .export-btn:hover {
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+            border-color: transparent;
         }
 
-        .preview-panel {
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        .preview-image {
-            max-width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .extracted-data {
-            background: #f9f9f9;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        /* Login Screen */
-        .login-container {
-            max-width: 450px;
-            margin: 100px auto;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 30px;
-            padding: 50px;
-            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .login-header h1 {
-            font-size: 32px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
+        .copy-feedback {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #4caf50, #66bb6a);
+            color: white;
+            padding: 18px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+            opacity: 0;
+            transform: translateX(400px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            font-weight: 700;
             font-size: 15px;
-            transition: all 0.3s;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        .copy-feedback.show {
+            opacity: 1;
+            transform: translateX(0);
         }
 
-        .btn-primary {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
+        .copy-feedback::before {
+            content: '✓';
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 18px;
+            animation: pop 0.3s ease;
         }
 
-        .btn-primary:hover {
+        @keyframes pop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .result-item.highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.35);
         }
 
-        .btn-secondary {
-            padding: 12px 30px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        .result-item.highlight .result-label,
+        .result-item.highlight .result-value {
             color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
         }
 
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Email Integration Section */
-        .email-info {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        .summary-section {
+            margin-top: 25px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
             padding: 25px;
             border-radius: 15px;
-            margin-top: 30px;
+            display: none;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            backdrop-filter: blur(10px);
         }
 
-        .email-info h4 {
-            margin-bottom: 15px;
-            color: var(--primary);
+        .summary-section.show {
+            display: block;
         }
 
-        .email-address {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-weight: 600;
+        .summary-title {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .summary-text {
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .line-items-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .line-items-section.show {
+            display: block;
+        }
+
+        .line-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 16px 18px;
+            border-radius: 12px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 14px;
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            transition: all 0.3s ease;
         }
 
-        .btn-copy {
-            padding: 8px 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+        .line-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .line-item-desc {
+            color: #333;
             font-weight: 600;
+            flex: 1;
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-content {
-                grid-template-columns: 1fr;
-            }
+        .line-item-qty {
+            color: #666;
+            margin: 0 10px;
+            font-size: 13px;
         }
 
-        /* Hidden */
-        .hidden {
-            display: none !important;
+        .line-item-price {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 15px;
         }
 
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            z-index: 2000;
-            display: none;
-            animation: fadeIn 0.3s;
+        .ai-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
         }
 
-        .notification.show {
-            display: block;
+        .ai-badge.enabled {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
         }
 
-        .notification.success {
-            border-left: 4px solid var(--success);
+        .ai-badge.disabled {
+            background: #f0f0f0;
+            color: #666;
         }
 
-        .notification.error {
-            border-left: 4px solid var(--error);
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div id="loginScreen">
-        <div class="login-container">
-            <div class="login-header">
-                <h1>SmartScanner</h1>
-                <p>Enterprise Invoice Processing</p>
+    <div class="container">
+        <h1>📄 Invoice Processing API</h1>
+        <p class="subtitle">Upload an invoice to extract vendor, date, and total amount</p>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📤</div>
+            <div class="upload-text">Click to upload or drag & drop</div>
+            <div class="upload-hint">Supports: PNG, JPG, PDF (Max 10MB)</div>
+            <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.pdf,.gif,.bmp,.tiff">
+        </div>
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+        </div>
+
+        <button class="process-btn" id="processBtn">Process Invoice</button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Processing your invoice...</div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="ai-badge" id="aiBadge"></div>
+            <h2 class="results-title">✨ Extracted Data</h2>
+            
+            <div class="result-item">
+                <span class="result-label">Vendor</span>
+                <span class="result-value" id="vendorValue">-</span>
             </div>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="loginEmail" required placeholder="your@email.com">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn-primary">Sign In</button>
-            </form>
-            <p style="text-align: center; margin-top: 20px; color: #666;">
-                Demo: admin@smartscanner.com / admin123
-            </p>
+            
+            <div class="result-item">
+                <span class="result-label">Invoice #</span>
+                <span class="result-value" id="invoiceNumberValue">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Date</span>
+                <span class="result-value" id="dateValue">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Subtotal</span>
+                <span class="result-value" id="subtotalValue">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Tax</span>
+                <span class="result-value" id="taxValue">-</span>
+            </div>
+            
+            <div class="result-item highlight">
+                <span class="result-label">Total</span>
+                <span class="result-value" id="totalValue">-</span>
+            </div>
+            
+            <div class="summary-section" id="summarySection">
+                <h3 class="summary-title">📋 Summary</h3>
+                <p class="summary-text" id="summaryText">-</p>
+            </div>
+            
+            <div class="line-items-section" id="lineItemsSection">
+                <h3 class="summary-title">🛒 Line Items</h3>
+                <div id="lineItemsList"></div>
+            </div>
+            
+            <div class="export-buttons">
+                <button class="export-btn" id="copyTableBtn" title="Copy as formatted table">
+                    📋 Copy Table
+                </button>
+                <button class="export-btn" id="exportExcelBtn" title="Download as CSV (opens in Excel)">
+                    📊 Export to Excel
+                </button>
+            </div>
+            
+            <button class="reset-btn" id="resetBtn">Upload Another Invoice</button>
+        </div>
+
+        <div class="copy-feedback" id="copyFeedback">✓ Copied to clipboard!</div>
+
+        <div class="footer">
+            Powered by <a href="https://ocr.space" target="_blank">OCR.space</a> • 
+            Built with ❤️ using Flask & Vercel
         </div>
     </div>
-
-    <!-- Main App (Hidden initially) -->
-    <div id="mainApp" class="hidden">
-        <!-- Navigation -->
-        <div class="navbar">
-            <div class="logo">📊 SmartScanner</div>
-            <div class="user-menu">
-                <span id="userName" style="font-weight: 600;"></span>
-                <div class="user-avatar" id="userAvatar">A</div>
-                <button class="btn-logout" id="logoutBtn">Logout</button>
-            </div>
-        </div>
-
-        <!-- Main Container -->
-        <div class="main-container">
-            <!-- Sidebar: Vendor Intelligence -->
-            <div class="sidebar">
-                <h3>📊 Dashboard</h3>
-                <div class="stat-card">
-                    <div class="stat-label">Total Processed</div>
-                    <div class="stat-value" id="totalProcessed">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">This Month</div>
-                    <div class="stat-value" id="thisMonth">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Spend</div>
-                    <div class="stat-value" id="totalSpend">$0</div>
-                </div>
-
-                <h3 style="margin-top: 30px;">🏢 Top Vendors</h3>
-                <div class="vendor-list" id="vendorList">
-                    <!-- Dynamic vendor items -->
-                </div>
-
-                <h3 style="margin-top: 30px;">📧 Email Integration</h3>
-                <div class="email-info">
-                    <p style="margin-bottom: 10px; color: #666;">Forward invoices to:</p>
-                    <div class="email-address">
-                        <span id="userEmailAddress">invoices@smartscanner.com</span>
-                        <button class="btn-copy" onclick="copyEmailAddress()">Copy</button>
-                    </div>
-                    <p style="margin-top: 10px; font-size: 12px; color: #999;">
-                        Invoices will be automatically processed
-                    </p>
-                </div>
-            </div>
-
-            <!-- Main Content -->
-            <div class="content">
-                <!-- Tabs -->
-                <div class="tabs">
-                    <button class="tab active" data-tab="batch">Batch Processing</button>
-                    <button class="tab" data-tab="single">Single Invoice</button>
-                    <button class="tab" data-tab="history">History</button>
-                </div>
-
-                <!-- Batch Processing Tab -->
-                <div class="tab-content active" id="batchTab">
-                    <div class="batch-upload-area" id="batchUploadArea">
-                        <div class="upload-icon">📁</div>
-                        <h2>Drop Multiple Invoices Here</h2>
-                        <p style="color: #999; margin-top: 10px;">or click to browse</p>
-                        <input type="file" id="batchFileInput" multiple accept="image/*,application/pdf" style="display: none;">
-                    </div>
-
-                    <div id="fileQueue" class="file-queue hidden"></div>
-
-                    <div id="batchProgress" class="batch-progress hidden">
-                        <div class="progress-label">
-                            <span>Processing...</span>
-                            <span id="progressText">0 / 0</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button class="btn-secondary hidden" id="processBatchBtn">Process All Invoices</button>
-                    </div>
-
-                    <div class="results-grid" id="resultsGrid"></div>
-                </div>
-
-                <!-- Single Invoice Tab -->
-                <div class="tab-content" id="singleTab">
-                    <p style="text-align: center; color: #999;">Single invoice processing (existing functionality)</p>
-                </div>
-
-                <!-- History Tab -->
-                <div class="tab-content" id="historyTab">
-                    <p style="text-align: center; color: #999;">Invoice history coming soon...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Smart Preview Modal -->
-    <div class="modal" id="previewModal">
-        <div class="modal-content">
-            <div class="preview-panel">
-                <h3>Original Invoice</h3>
-                <img id="previewImage" class="preview-image" src="" alt="Invoice">
-            </div>
-            <div class="extracted-data">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3>Extracted Data</h3>
-                    <button onclick="closePreview()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
-                </div>
-                <div id="previewData"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notification -->
-    <div class="notification" id="notification"></div>
 
     <script>
-        // ============================================
-        // AUTHENTICATION SYSTEM
-        // ============================================
-        const AUTH_KEY = 'smartscanner_auth';
-        const DEMO_USERS = {
-            'admin@smartscanner.com': {
-                password: 'admin123',
-                name: 'Admin User',
-                role: 'admin',
-                emailAddress: 'admin-abc123@invoices.smartscanner.com'
-            },
-            'user@company.com': {
-                password: 'user123',
-                name: 'John Smith',
-                role: 'user',
-                emailAddress: 'john-xyz789@invoices.smartscanner.com'
-            }
-        };
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const processBtn = document.getElementById('processBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+        const resetBtn = document.getElementById('resetBtn');
+        const vendorValue = document.getElementById('vendorValue');
+        const dateValue = document.getElementById('dateValue');
+        const totalValue = document.getElementById('totalValue');
+        const invoiceNumberValue = document.getElementById('invoiceNumberValue');
+        const taxValue = document.getElementById('taxValue');
+        const subtotalValue = document.getElementById('subtotalValue');
+        const summarySection = document.getElementById('summarySection');
+        const summaryText = document.getElementById('summaryText');
+        const lineItemsSection = document.getElementById('lineItemsSection');
+        const lineItemsList = document.getElementById('lineItemsList');
+        const aiBadge = document.getElementById('aiBadge');
 
-        let currentUser = null;
+        let selectedFile = null;
+        let extractedData = null; // Store extracted data for export
 
-        function checkAuth() {
-            const auth = localStorage.getItem(AUTH_KEY);
-            if (auth) {
-                currentUser = JSON.parse(auth);
-                showMainApp();
-            }
-        }
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
 
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            const user = DEMO_USERS[email];
-            if (user && user.password === password) {
-                currentUser = user;
-                localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-                showMainApp();
-            } else {
-                showNotification('Invalid credentials', 'error');
-            }
+            uploadArea.classList.add('dragover');
         });
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem(AUTH_KEY);
-            currentUser = null;
-            document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('loginScreen').classList.remove('hidden');
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
         });
 
-        function showMainApp() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('userAvatar').textContent = currentUser.name[0];
-            document.getElementById('userEmailAddress').textContent = currentUser.emailAddress;
-            loadDashboardStats();
-        }
-
-        // ============================================
-        // VENDOR INTELLIGENCE & DASHBOARD
-        // ============================================
-        const STORAGE_KEY = 'smartscanner_invoices';
-
-        function loadDashboardStats() {
-            const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            
-            document.getElementById('totalProcessed').textContent = invoices.length;
-            
-            const thisMonth = invoices.filter(inv => {
-                const date = new Date(inv.processedAt);
-                const now = new Date();
-                return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-            }).length;
-            document.getElementById('thisMonth').textContent = thisMonth;
-
-            const totalSpend = invoices.reduce((sum, inv) => {
-                const amount = parseFloat(inv.data.total?.replace(/[^0-9.-]/g, '') || 0);
-                return sum + amount;
-            }, 0);
-            document.getElementById('totalSpend').textContent = `$${totalSpend.toFixed(2)}`;
-
-            // Vendor breakdown
-            const vendorMap = {};
-            invoices.forEach(inv => {
-                const vendor = inv.data.vendor || 'Unknown';
-                vendorMap[vendor] = (vendorMap[vendor] || 0) + 1;
-            });
-
-            const topVendors = Object.entries(vendorMap)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
-
-            const vendorList = document.getElementById('vendorList');
-            vendorList.innerHTML = topVendors.map(([vendor, count]) => `
-                <div class="vendor-item">
-                    <span class="vendor-name">${vendor}</span>
-                    <span class="vendor-count">${count}</span>
-                </div>
-            `).join('') || '<p style="color: #999;">No vendors yet</p>';
-        }
-
-        function saveInvoice(data) {
-            const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            invoices.push({
-                id: Date.now(),
-                data: data,
-                processedAt: new Date().toISOString(),
-                user: currentUser.email
-            });
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
-            loadDashboardStats();
-        }
-
-        // ============================================
-        // BATCH PROCESSING
-        // ============================================
-        let fileQueue = [];
-
-        const batchUploadArea = document.getElementById('batchUploadArea');
-        const batchFileInput = document.getElementById('batchFileInput');
-        const fileQueueElement = document.getElementById('fileQueue');
-        const processBatchBtn = document.getElementById('processBatchBtn');
-        const batchProgress = document.getElementById('batchProgress');
-        const resultsGrid = document.getElementById('resultsGrid');
-
-        batchUploadArea.addEventListener('click', () => batchFileInput.click());
-
-        batchFileInput.addEventListener('change', (e) => {
-            addFilesToQueue(Array.from(e.target.files));
-        });
-
-        batchUploadArea.addEventListener('dragover', (e) => {
+        uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            batchUploadArea.style.borderColor = 'var(--primary)';
+            uploadArea.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
         });
 
-        batchUploadArea.addEventListener('dragleave', () => {
-            batchUploadArea.style.borderColor = '';
-        });
+        function handleFile(file) {
+            if (!file) return;
 
-        batchUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            batchUploadArea.style.borderColor = '';
-            addFilesToQueue(Array.from(e.dataTransfer.files));
-        });
-
-        function addFilesToQueue(files) {
-            files.forEach(file => {
-                if (file.type.startsWith('image/') || file.type === 'application/pdf') {
-                    const id = Date.now() + Math.random();
-                    fileQueue.push({
-                        id,
-                        file,
-                        status: 'pending',
-                        result: null
-                    });
-                }
-            });
-            renderFileQueue();
-        }
-
-        function renderFileQueue() {
-            if (fileQueue.length === 0) {
-                fileQueueElement.classList.add('hidden');
-                processBatchBtn.classList.add('hidden');
+            // Validate file type
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp', 'image/tiff', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                showError('Invalid file type. Please upload PNG, JPG, PDF, GIF, BMP, or TIFF.');
                 return;
             }
 
-            fileQueueElement.classList.remove('hidden');
-            processBatchBtn.classList.remove('hidden');
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File too large. Maximum size is 10MB.');
+                return;
+            }
 
-            fileQueueElement.innerHTML = fileQueue.map(item => `
-                <div class="file-queue-item">
-                    <div class="file-preview">📄</div>
-                    <div class="file-details">
-                        <div class="file-name">${item.file.name}</div>
-                        <div class="file-size">${(item.file.size / 1024).toFixed(1)} KB</div>
-                    </div>
-                    <div class="file-status ${item.status}">${item.status}</div>
-                    <div class="file-actions">
-                        ${item.status === 'pending' ? `<button class="btn-remove" onclick="removeFromQueue(${item.id})">Remove</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
+            selectedFile = file;
+
+            // Show file info
+            fileName.textContent = file.name;
+            fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+            fileInfo.classList.add('show');
+            processBtn.classList.add('show');
+
+            // Hide previous results/errors
+            results.classList.remove('show');
+            error.classList.remove('show');
         }
 
-        function removeFromQueue(id) {
-            fileQueue = fileQueue.filter(item => item.id !== id);
-            renderFileQueue();
-        }
+        // Process invoice
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
 
-        processBatchBtn.addEventListener('click', async () => {
-            processBatchBtn.disabled = true;
-            batchProgress.classList.remove('hidden');
-            resultsGrid.innerHTML = '';
+            // Show loading
+            processBtn.disabled = true;
+            loading.classList.add('show');
+            error.classList.remove('show');
+            results.classList.remove('show');
 
-            let completed = 0;
-            const total = fileQueue.length;
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
 
-            for (let item of fileQueue) {
-                item.status = 'processing';
-                renderFileQueue();
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
 
-                try {
-                    const formData = new FormData();
-                    formData.append('file', item.file);
+                const data = await response.json();
 
-                    const response = await fetch('/api/process', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        item.status = 'completed';
-                        item.result = result;
-                        
-                        // Save to history
-                        saveInvoice(result.data);
-                        
-                        // Validate and render result
-                        renderResult(item);
+                if (data.success) {
+                    // Store extracted data for export
+                    extractedData = data;
+                    
+                    // Show AI status badge
+                    if (data.ai_enabled) {
+                        aiBadge.textContent = '🤖 AI-Powered Extraction';
+                        aiBadge.className = 'ai-badge enabled';
                     } else {
-                        item.status = 'error';
-                        item.error = result.error;
+                        aiBadge.textContent = '⚙️ Regex-Based Extraction (Add GEMINI_API_KEY for AI)';
+                        aiBadge.className = 'ai-badge disabled';
                     }
-                } catch (error) {
-                    item.status = 'error';
-                    item.error = error.message;
+                    
+                    // Show results
+                    vendorValue.textContent = data.data.vendor || 'Not found';
+                    vendorValue.className = data.data.vendor ? 'result-value' : 'result-value empty';
+                    
+                    invoiceNumberValue.textContent = data.data.invoice_number || 'Not found';
+                    invoiceNumberValue.className = data.data.invoice_number ? 'result-value' : 'result-value empty';
+                    
+                    dateValue.textContent = data.data.date || 'Not found';
+                    dateValue.className = data.data.date ? 'result-value' : 'result-value empty';
+                    
+                    subtotalValue.textContent = data.data.subtotal || 'Not found';
+                    subtotalValue.className = data.data.subtotal ? 'result-value' : 'result-value empty';
+                    
+                    taxValue.textContent = data.data.tax || 'Not found';
+                    taxValue.className = data.data.tax ? 'result-value' : 'result-value empty';
+                    
+                    totalValue.textContent = data.data.total || 'Not found';
+                    totalValue.className = data.data.total ? 'result-value' : 'result-value empty';
+                    
+                    // Show summary if available
+                    if (data.data.summary) {
+                        summaryText.textContent = data.data.summary;
+                        summarySection.classList.add('show');
+                    } else {
+                        summarySection.classList.remove('show');
+                    }
+                    
+                    // Show line items if available
+                    if (data.data.line_items && data.data.line_items.length > 0) {
+                        lineItemsList.innerHTML = '';
+                        data.data.line_items.forEach(item => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'line-item';
+                            itemDiv.innerHTML = `
+                                <span class="line-item-desc">${item.description || 'Item'}</span>
+                                <span class="line-item-qty">Qty: ${item.quantity || '-'}</span>
+                                <span class="line-item-price">${item.price || '-'}</span>
+                            `;
+                            lineItemsList.appendChild(itemDiv);
+                        });
+                        lineItemsSection.classList.add('show');
+                    } else {
+                        lineItemsSection.classList.remove('show');
+                    }
+                    
+                    results.classList.add('show');
+                } else {
+                    showError(data.error || 'Processing failed. Please try again.');
                 }
-
-                completed++;
-                updateProgress(completed, total);
-                renderFileQueue();
+            } catch (err) {
+                showError('Network error. Please check your connection and try again.');
+                console.error(err);
+            } finally {
+                loading.classList.remove('show');
+                processBtn.disabled = false;
             }
-
-            processBatchBtn.disabled = false;
-            showNotification(`Processed ${completed} invoices successfully!`, 'success');
         });
 
-        function updateProgress(completed, total) {
-            const percentage = (completed / total) * 100;
-            document.getElementById('progressFill').style.width = `${percentage}%`;
-            document.getElementById('progressText').textContent = `${completed} / ${total}`;
+        // Reset
+        resetBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            processBtn.classList.remove('show');
+            results.classList.remove('show');
+            error.classList.remove('show');
+        });
+
+        function showError(message) {
+            error.textContent = message;
+            error.classList.add('show');
         }
 
-        // ============================================
-        // SMART DATA VALIDATION
-        // ============================================
-        function validateInvoice(data) {
-            const warnings = [];
-            const invoices = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-
-            // 1. Check for duplicates
-            const duplicate = invoices.find(inv => 
-                inv.data.vendor === data.vendor && 
-                inv.data.invoice_number === data.invoice_number
-            );
-            if (duplicate) {
-                warnings.push({ type: 'duplicate', message: 'Duplicate invoice detected' });
-            }
-
-            // 2. Verify tax calculation
-            const subtotal = parseFloat(data.subtotal?.replace(/[^0-9.-]/g, '') || 0);
-            const tax = parseFloat(data.tax?.replace(/[^0-9.-]/g, '') || 0);
-            const total = parseFloat(data.total?.replace(/[^0-9.-]/g, '') || 0);
+        // Export Functions
+        
+        // Wait for DOM to be ready, then attach export button listeners
+        window.addEventListener('DOMContentLoaded', () => {
+            // 1. Copy as Table
+            const copyBtn = document.getElementById('copyTableBtn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    if (!extractedData) {
+                        showError('No invoice data to copy. Please process an invoice first.');
+                        return;
+                    }
+                    
+                    const d = extractedData.data;
             
-            if (Math.abs((subtotal + tax) - total) > 0.01) {
-                warnings.push({ type: 'tax-error', message: 'Tax calculation mismatch' });
+            // Create Word-compatible table using tab-separated format
+            let table = 'INVOICE DETAILS\n';
+            table += `Vendor Name\t\t${d.vendor || 'Not Available'}\n`;
+            table += `Invoice Number\t\t${d.invoice_number || 'Not Available'}\n`;
+            table += `Invoice Date\t\t${d.date || 'Not Available'}\n`;
+            table += `Subtotal\t\t${d.subtotal || 'Not Available'}\n`;
+            table += `Tax Amount\t\t${d.tax || 'Not Available'}\n`;
+            table += `\nTOTAL AMOUNT\t\t${d.total || 'Not Available'}\n`;
+            
+            copyToClipboard(table);
+                });
             }
-
-            // 3. Check for missing fields
-            if (!data.vendor || !data.invoice_number || !data.total) {
-                warnings.push({ type: 'missing-fields', message: 'Missing critical fields' });
+        
+            // 2. Export as Excel (CSV format that Excel can open)
+            const excelBtn = document.getElementById('exportExcelBtn');
+            if (excelBtn) {
+                excelBtn.addEventListener('click', () => {
+                    if (!extractedData) {
+                        showError('No invoice data to export. Please process an invoice first.');
+                        return;
+                    }
+                    
+                    try {
+                        const d = extractedData.data;
+                        
+                        // Create CSV content with proper Excel formatting
+                        let csv = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+                        
+                        // Add title
+                        csv += 'INVOICE DETAILS\n\n';
+                        
+                        // Add invoice data
+                        csv += 'Field,Value\n';
+                        csv += `Vendor Name,"${(d.vendor || 'Not Available').replace(/"/g, '""')}"\n`;
+                        csv += `Invoice Number,"${(d.invoice_number || 'Not Available').replace(/"/g, '""')}"\n`;
+                        csv += `Invoice Date,"${(d.date || 'Not Available').replace(/"/g, '""')}"\n`;
+                        csv += `Subtotal,"${(d.subtotal || 'Not Available').replace(/"/g, '""')}"\n`;
+                        csv += `Tax Amount,"${(d.tax || 'Not Available').replace(/"/g, '""')}"\n`;
+                        csv += `TOTAL AMOUNT,"${(d.total || 'Not Available').replace(/"/g, '""')}"\n`;
+                        
+                        // Create blob and download
+                        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                        const link = document.createElement('a');
+                        const url = URL.createObjectURL(blob);
+                        
+                        link.setAttribute('href', url);
+                        link.setAttribute('download', 'invoice_data.csv');
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                    } catch (error) {
+                        showError('Failed to generate Excel file: ' + error.message);
+                        console.error('Excel export error:', error);
+                    }
+                });
             }
-
-            // 4. Verified if no issues
-            if (warnings.length === 0) {
-                warnings.push({ type: 'verified', message: 'All checks passed' });
-            }
-
-            return warnings;
-        }
-
-        // ============================================
-        // MULTI-CURRENCY SUPPORT
-        // ============================================
-        const EXCHANGE_RATES = {
-            'USD': 1,
-            'EUR': 0.92,
-            'GBP': 0.79,
-            'INR': 83.12,
-            'JPY': 149.50,
-            'CAD': 1.36,
-            'AUD': 1.53
-        };
-
-        function detectCurrency(text) {
-            const symbols = {
-                '$': 'USD',
-                '€': 'EUR',
-                '£': 'GBP',
-                '₹': 'INR',
-                '¥': 'JPY'
-            };
-
-            for (let [symbol, currency] of Object.entries(symbols)) {
-                if (text?.includes(symbol)) return currency;
-            }
-            return 'USD';
-        }
-
-        function convertCurrency(amount, fromCurrency, toCurrency = 'USD') {
-            const numAmount = parseFloat(amount.replace(/[^0-9.-]/g, ''));
-            const rate = EXCHANGE_RATES[toCurrency] / EXCHANGE_RATES[fromCurrency];
-            return (numAmount * rate).toFixed(2);
-        }
-
-        // ============================================
-        // RENDER RESULT CARD
-        // ============================================
-        function renderResult(item) {
-            const data = item.result.data;
-            const warnings = validateInvoice(data);
-            const currency = detectCurrency(data.total);
-
-            const hasWarning = warnings.some(w => w.type === 'duplicate' || w.type === 'tax-error');
-            const hasError = warnings.some(w => w.type === 'missing-fields');
-
-            const card = document.createElement('div');
-            card.className = `result-card ${hasWarning ? 'has-warning' : ''} ${hasError ? 'has-error' : ''}`;
-            card.innerHTML = `
-                <div class="result-header">
-                    <strong>${data.vendor || 'Unknown Vendor'}</strong>
-                    <button onclick="showPreview('${item.file.name}', ${JSON.stringify(data).replace(/"/g, '&quot;')})" 
-                            style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer;">
-                        Preview
-                    </button>
-                </div>
-
-                <div class="validation-badges">
-                    ${warnings.map(w => `<span class="badge ${w.type}">${w.type.replace('-', ' ')}</span>`).join('')}
-                </div>
-
-                <div class="result-field">
-                    <div class="field-label">Invoice Number</div>
-                    <div class="field-value">${data.invoice_number || 'N/A'}</div>
-                </div>
-
-                <div class="result-field">
-                    <div class="field-label">Date</div>
-                    <div class="field-value">${data.date || 'N/A'}</div>
-                </div>
-
-                <div class="result-field">
-                    <div class="field-label">Total</div>
-                    <div class="field-value">
-                        ${data.total || 'N/A'}
-                        ${currency !== 'USD' ? `<span class="currency-badge">≈ $${convertCurrency(data.total, currency)}</span>` : ''}
-                    </div>
-                </div>
-            `;
-
-            resultsGrid.appendChild(card);
-        }
-
-        // ============================================
-        // SMART PREVIEW
-        // ============================================
-        function showPreview(filename, data) {
-            const modal = document.getElementById('previewModal');
-            const previewData = document.getElementById('previewData');
-
-            // Display extracted data
-            previewData.innerHTML = `
-                <div class="result-field">
-                    <div class="field-label">Vendor Name</div>
-                    <div class="field-value">${data.vendor || 'Not Available'}</div>
-                </div>
-                <div class="result-field">
-                    <div class="field-label">Invoice Number</div>
-                    <div class="field-value">${data.invoice_number || 'Not Available'}</div>
-                </div>
-                <div class="result-field">
-                    <div class="field-label">Invoice Date</div>
-                    <div class="field-value">${data.date || 'Not Available'}</div>
-                </div>
-                <div class="result-field">
-                    <div class="field-label">Subtotal</div>
-                    <div class="field-value">${data.subtotal || 'Not Available'}</div>
-                </div>
-                <div class="result-field">
-                    <div class="field-label">Tax Amount</div>
-                    <div class="field-value">${data.tax || 'Not Available'}</div>
-                </div>
-                <div class="result-field">
-                    <div class="field-label">Total Amount</div>
-                    <div class="field-value" style="font-size: 24px; color: var(--primary);">${data.total || 'Not Available'}</div>
-                </div>
-            `;
-
-            modal.classList.add('show');
-        }
-
-        function closePreview() {
-            document.getElementById('previewModal').classList.remove('show');
-        }
-
-        // ============================================
-        // UTILITIES
-        // ============================================
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type} show`;
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-
-        function copyEmailAddress() {
-            const email = document.getElementById('userEmailAddress').textContent;
-            navigator.clipboard.writeText(email);
-            showNotification('Email address copied!', 'success');
-        }
-
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                tab.classList.add('active');
-                const tabName = tab.dataset.tab;
-                document.getElementById(`${tabName}Tab`).classList.add('active');
+        });  // End of DOMContentLoaded
+        
+        // 3. Download JSON - REMOVED (keeping only Copy Table and Export Excel)
+        
+        // Helper: Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const feedback = document.getElementById('copyFeedback');
+                if (feedback) {
+                    feedback.textContent = '✓ Copied to clipboard!';
+                    feedback.classList.add('show');
+                    setTimeout(() => feedback.classList.remove('show'), 2000);
+                } else {
+                    console.error('Copy feedback element not found');
+                }
+            }).catch(err => {
+                showError('Failed to copy to clipboard');
+                console.error(err);
             });
-        });
-
-        // Initialize
-        checkAuth();
+        }
+        
+        // Helper: Download file
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            const feedback = document.getElementById('copyFeedback');
+            feedback.textContent = `✓ Downloaded ${filename}!`;
+            feedback.classList.add('show');
+            setTimeout(() => {
+                feedback.classList.remove('show');
+                feedback.textContent = '✓ Copied to clipboard!';
+            }, 2000);
+        }
+        
+        // Helper: Pad text to right
+        function padRight(text, length) {
+            text = String(text);
+            if (text.length >= length) return text.substring(0, length);
+            return text + ' '.repeat(length - text.length);
+        }
+        
+        // Helper: Truncate text
+        function truncate(text, maxLength) {
+            text = String(text);
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength - 3) + '...';
+        }
+        
+        // Helper: Wrap text to multiple lines
+        function wrapText(text, maxWidth) {
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = '';
+            
+            words.forEach(word => {
+                if ((currentLine + word).length <= maxWidth) {
+                    currentLine += (currentLine ? ' ' : '') + word;
+                } else {
+                    if (currentLine) lines.push(currentLine);
+                    currentLine = word;
+                }
+            });
+            
+            if (currentLine) lines.push(currentLine);
+            return lines;
+        }
     </script>
 </body>
 </html>
