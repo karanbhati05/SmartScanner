@@ -4,26 +4,36 @@ Handles OCR processing and intelligent data extraction from invoice images.
 """
 
 import re
-import pytesseract
-from PIL import Image
+import os
+import requests
 from fuzzywuzzy import process
 
 
-def extract_invoice_data(image_path, known_vendors):
+def extract_invoice_data(image_path, known_vendors, ocr_api_key=None):
     """
     Extract key invoice information from an image using OCR and pattern matching.
     
     Args:
         image_path (str): Path to the invoice image file
         known_vendors (list): List of known vendor names for fuzzy matching
+        ocr_api_key (str, optional): OCR.space API key. If not provided, uses env variable.
     
     Returns:
         dict: Dictionary containing vendor, date, and total amount
     """
-    # Perform OCR on the image
+    # Get API key from parameter or environment variable
+    api_key = ocr_api_key or os.environ.get('OCR_API_KEY', 'K87899142388957')
+    
+    # Perform OCR on the image using OCR.space API
     try:
-        image = Image.open(image_path)
-        raw_text = pytesseract.image_to_string(image)
+        raw_text = perform_ocr(image_path, api_key)
+        if not raw_text:
+            return {
+                'vendor': None,
+                'date': None,
+                'total': None,
+                'error': 'OCR failed: No text extracted'
+            }
     except Exception as e:
         return {
             'vendor': None,
@@ -46,6 +56,50 @@ def extract_invoice_data(image_path, known_vendors):
         'date': date,
         'total': total
     }
+
+
+def perform_ocr(image_path, api_key):
+    """
+    Perform OCR using OCR.space API.
+    
+    Args:
+        image_path (str): Path to the image file
+        api_key (str): OCR.space API key
+    
+    Returns:
+        str: Extracted text from the image
+    """
+    url = 'https://api.ocr.space/parse/image'
+    
+    with open(image_path, 'rb') as f:
+        payload = {
+            'apikey': api_key,
+            'language': 'eng',
+            'isOverlayRequired': False,
+            'detectOrientation': True,
+            'scale': True,
+            'OCREngine': 2  # Engine 2 is more accurate
+        }
+        
+        files = {
+            'file': f
+        }
+        
+        response = requests.post(url, files=files, data=payload)
+        response.raise_for_status()
+        
+        result = response.json()
+        
+        if result.get('IsErroredOnProcessing'):
+            error_msg = result.get('ErrorMessage', ['Unknown error'])[0]
+            raise Exception(f'OCR.space API error: {error_msg}')
+        
+        # Extract text from parsed results
+        if result.get('ParsedResults'):
+            parsed_text = result['ParsedResults'][0].get('ParsedText', '')
+            return parsed_text
+        
+        return None
 
 
 def extract_vendor(text, known_vendors):

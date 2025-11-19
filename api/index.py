@@ -16,6 +16,9 @@ app = Flask(__name__)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'pdf'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
+# Get OCR API key from environment variable
+OCR_API_KEY = os.environ.get('OCR_API_KEY', 'K87899142388957')  # Free demo key
+
 # Known vendors list (can be expanded or loaded from a database)
 KNOWN_VENDORS = [
     'Amazon',
@@ -84,8 +87,8 @@ def process_invoice():
             temp_path = temp_file.name
             file.save(temp_path)
         
-        # Extract invoice data
-        result = extract_invoice_data(temp_path, KNOWN_VENDORS)
+        # Extract invoice data with OCR API key
+        result = extract_invoice_data(temp_path, KNOWN_VENDORS, OCR_API_KEY)
         
         # Clean up temporary file
         try:
