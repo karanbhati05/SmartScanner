@@ -43,11 +43,16 @@ def extract_invoice_data(image_path, known_vendors=None, ocr_api_key=None):
         }
     
     # Try AI-powered extraction first
+    print(f"OCR extracted {len(raw_text)} characters of text")
+    print(f"First 200 chars: {raw_text[:200]}...")
+    
     ai_result = extract_with_ai(raw_text)
     if ai_result:
         ai_result['_ai_used'] = True
+        print("✅ AI extraction successful!")
         return ai_result
     
+    print("⚠️ AI extraction failed, falling back to regex")
     # Fallback to regex-based extraction
     vendor = extract_vendor_nlp(raw_text)
     date = extract_date(raw_text)
@@ -133,9 +138,13 @@ If you cannot find a field, use null. Keep currency symbols with amounts. For li
         }
         
         print("Calling Gemini API...")
-        response = requests.post(url, json=payload, timeout=15)
+        print(f"Request URL: {url[:80]}...")
+        print(f"Payload size: {len(json.dumps(payload))} chars")
+        
+        response = requests.post(url, json=payload, timeout=20)
         
         print(f"Gemini API Status: {response.status_code}")
+        print(f"Response headers: {dict(response.headers)}")
         
         if response.status_code != 200:
             print(f"Gemini API Error: {response.text}")
@@ -170,6 +179,20 @@ If you cannot find a field, use null. Keep currency symbols with amounts. For li
         print("No candidates in Gemini response")
         return None
         
+    except requests.exceptions.Timeout:
+        print("AI extraction failed: Request timeout after 20 seconds")
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"AI extraction failed: Request error - {type(e).__name__}: {str(e)}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"AI extraction failed: JSON parsing error - {str(e)}")
+        print(f"Raw generated text was: {generated_text if 'generated_text' in locals() else 'N/A'}")
+        return None
+    except KeyError as e:
+        print(f"AI extraction failed: Missing key in response - {str(e)}")
+        print(f"Response structure: {result if 'result' in locals() else 'N/A'}")
+        return None
     except Exception as e:
         print(f"AI extraction failed with exception: {type(e).__name__}: {str(e)}")
         import traceback
