@@ -205,7 +205,7 @@ If you cannot find a field, use null. Keep currency symbols with amounts. For li
 
 def perform_ocr(image_path, api_key):
     """
-    Perform OCR using OCR.space API.
+    Perform OCR using OCR.space API with timeout and retry logic.
     
     Args:
         image_path (str): Path to the image file
@@ -216,35 +216,61 @@ def perform_ocr(image_path, api_key):
     """
     url = 'https://api.ocr.space/parse/image'
     
-    with open(image_path, 'rb') as f:
-        payload = {
-            'apikey': api_key,
-            'language': 'eng',
-            'isOverlayRequired': False,
-            'detectOrientation': True,
-            'scale': True,
-            'OCREngine': 2  # Engine 2 is more accurate
-        }
-        
-        files = {
-            'file': f
-        }
-        
-        response = requests.post(url, files=files, data=payload)
-        response.raise_for_status()
-        
-        result = response.json()
-        
-        if result.get('IsErroredOnProcessing'):
-            error_msg = result.get('ErrorMessage', ['Unknown error'])[0]
-            raise Exception(f'OCR.space API error: {error_msg}')
-        
-        # Extract text from parsed results
-        if result.get('ParsedResults'):
-            parsed_text = result['ParsedResults'][0].get('ParsedText', '')
-            return parsed_text
-        
-        return None
+    # Configure timeouts: (connect timeout, read timeout)
+    timeout = (10, 30)  # 10s to connect, 30s to read response
+    max_retries = 2
+    
+    for attempt in range(max_retries):
+        try:
+            with open(image_path, 'rb') as f:
+                payload = {
+                    'apikey': api_key,
+                    'language': 'eng',
+                    'isOverlayRequired': False,
+                    'detectOrientation': True,
+                    'scale': True,
+                    'OCREngine': 2  # Engine 2 is more accurate
+                }
+                
+                files = {
+                    'file': f
+                }
+                
+                print(f"OCR attempt {attempt + 1}/{max_retries}...")
+                response = requests.post(url, files=files, data=payload, timeout=timeout)
+                response.raise_for_status()
+                
+                result = response.json()
+                
+                if result.get('IsErroredOnProcessing'):
+                    error_msg = result.get('ErrorMessage', ['Unknown error'])[0]
+                    raise Exception(f'OCR.space API error: {error_msg}')
+                
+                # Extract text from parsed results
+                if result.get('ParsedResults'):
+                    parsed_text = result['ParsedResults'][0].get('ParsedText', '')
+                    print(f"✅ OCR successful on attempt {attempt + 1}")
+                    return parsed_text
+                
+                return None
+                
+        except requests.exceptions.Timeout as e:
+            print(f"⚠️ OCR timeout on attempt {attempt + 1}: {str(e)}")
+            if attempt == max_retries - 1:
+                raise Exception(f"OCR request timed out after {max_retries} attempts. The OCR service may be slow or unavailable.")
+            continue
+            
+        except requests.exceptions.ConnectionError as e:
+            print(f"⚠️ OCR connection error on attempt {attempt + 1}: {str(e)}")
+            if attempt == max_retries - 1:
+                raise Exception(f"Could not connect to OCR service after {max_retries} attempts. Please check your internet connection.")
+            continue
+            
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ OCR request error on attempt {attempt + 1}: {str(e)}")
+            raise Exception(f"OCR request failed: {str(e)}")
+    
+    return None
 
 
 def extract_vendor(text, known_vendors):
