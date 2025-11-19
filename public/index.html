@@ -954,7 +954,6 @@
             
             // Create Word-compatible table using tab-separated format
             let table = 'INVOICE DETAILS\n';
-            table += '═══════════════════════════════════════════════════════════════════\n\n';
             table += `Vendor Name\t\t${d.vendor || 'Not Available'}\n`;
             table += `Invoice Number\t\t${d.invoice_number || 'Not Available'}\n`;
             table += `Invoice Date\t\t${d.date || 'Not Available'}\n`;
@@ -1019,8 +1018,13 @@
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
                 const feedback = document.getElementById('copyFeedback');
-                feedback.classList.add('show');
-                setTimeout(() => feedback.classList.remove('show'), 2000);
+                if (feedback) {
+                    feedback.textContent = '✓ Copied to clipboard!';
+                    feedback.classList.add('show');
+                    setTimeout(() => feedback.classList.remove('show'), 2000);
+                } else {
+                    console.error('Copy feedback element not found');
+                }
             }).catch(err => {
                 showError('Failed to copy to clipboard');
                 console.error(err);
