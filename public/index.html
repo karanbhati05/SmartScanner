@@ -476,17 +476,11 @@
             </div>
             
             <div class="export-buttons">
-                <button class="export-btn" id="copyTableBtn" title="Copy as table format">
+                <button class="export-btn" id="copyTableBtn" title="Copy as formatted table">
                     📋 Copy Table
                 </button>
-                <button class="export-btn" id="exportCSVBtn" title="Download as CSV spreadsheet">
-                    📊 Export CSV
-                </button>
                 <button class="export-btn" id="exportExcelBtn" title="Download as Excel spreadsheet">
-                    📈 Export Excel
-                </button>
-                <button class="export-btn" id="downloadJSONBtn" title="Download raw JSON data">
-                    💾 Download JSON
+                    📊 Export to Excel
                 </button>
             </div>
             
@@ -695,46 +689,45 @@
             
             const d = extractedData.data;
             
-            // Create nicely formatted table
-            let table = '╔════════════════════════════════════════════════════════════════════════╗\n';
-            table += '║                          INVOICE DETAILS                               ║\n';
-            table += '╠════════════════════════════════════════════════════════════════════════╣\n';
-            table += `║ Vendor Name      │ ${padRight(d.vendor || 'Not Available', 53)} ║\n`;
-            table += '╟──────────────────┼────────────────────────────────────────────────────╢\n';
-            table += `║ Invoice Number   │ ${padRight(d.invoice_number || 'Not Available', 53)} ║\n`;
-            table += '╟──────────────────┼────────────────────────────────────────────────────╢\n';
-            table += `║ Invoice Date     │ ${padRight(d.date || 'Not Available', 53)} ║\n`;
-            table += '╟──────────────────┼────────────────────────────────────────────────────╢\n';
-            table += `║ Subtotal         │ ${padRight(d.subtotal || 'Not Available', 53)} ║\n`;
-            table += '╟──────────────────┼────────────────────────────────────────────────────╢\n';
-            table += `║ Tax Amount       │ ${padRight(d.tax || 'Not Available', 53)} ║\n`;
-            table += '╟──────────────────┼────────────────────────────────────────────────────╢\n';
-            table += `║ TOTAL AMOUNT     │ ${padRight(d.total || 'Not Available', 53)} ║\n`;
-            table += '╚══════════════════╧════════════════════════════════════════════════════╝\n';
+            // Create clean, professional table
+            let table = '┌─────────────────────────────────────────────────────────────────────┐\n';
+            table += '│                        INVOICE DETAILS                              │\n';
+            table += '├─────────────────────────────────────────────────────────────────────┤\n';
+            table += `│ Vendor           : ${padRight(d.vendor || 'Not Available', 47)}│\n`;
+            table += `│ Invoice Number   : ${padRight(d.invoice_number || 'Not Available', 47)}│\n`;
+            table += `│ Date             : ${padRight(d.date || 'Not Available', 47)}│\n`;
+            table += `│ Subtotal         : ${padRight(d.subtotal || 'Not Available', 47)}│\n`;
+            table += `│ Tax              : ${padRight(d.tax || 'Not Available', 47)}│\n`;
+            table += '├─────────────────────────────────────────────────────────────────────┤\n';
+            table += `│ TOTAL            : ${padRight(d.total || 'Not Available', 47)}│\n`;
+            table += '└─────────────────────────────────────────────────────────────────────┘\n';
             
             if (d.summary) {
-                table += '\n╔════════════════════════════════════════════════════════════════════════╗\n';
-                table += '║                            SUMMARY                                     ║\n';
-                table += '╠════════════════════════════════════════════════════════════════════════╣\n';
-                const summaryLines = wrapText(d.summary, 70);
+                table += '\n┌─────────────────────────────────────────────────────────────────────┐\n';
+                table += '│ SUMMARY                                                             │\n';
+                table += '├─────────────────────────────────────────────────────────────────────┤\n';
+                const summaryLines = wrapText(d.summary, 67);
                 summaryLines.forEach(line => {
-                    table += `║ ${padRight(line, 70)} ║\n`;
+                    table += `│ ${padRight(line, 67)} │\n`;
                 });
-                table += '╚════════════════════════════════════════════════════════════════════════╝\n';
+                table += '└─────────────────────────────────────────────────────────────────────┘\n';
             }
             
             if (d.line_items && d.line_items.length > 0) {
-                table += '\n╔══════╦═══════════════════════════════════════════╦══════════╦═══════════╗\n';
-                table += '║  #   ║ Description                               ║ Quantity ║ Price     ║\n';
-                table += '╠══════╬═══════════════════════════════════════════╬══════════╬═══════════╣\n';
+                table += '\n┌────┬──────────────────────────────────────────┬──────────┬──────────────┐\n';
+                table += '│ #  │ Description                          │ Quantity │ Price        │\n';
+                table += '├────┼──────────────────────────────────────────┼──────────┼──────────────┤\n';
                 d.line_items.forEach((item, i) => {
-                    const desc = truncate(item.description || 'Item', 43);
+                    const desc = truncate(item.description || 'Item', 40);
                     const qty = truncate(item.quantity || '-', 8);
-                    const price = truncate(item.price || '-', 9);
-                    table += `║ ${padRight((i + 1).toString(), 4)} ║ ${padRight(desc, 45)} ║ ${padRight(qty, 8)} ║ ${padRight(price, 9)} ║\n`;
+                    const price = truncate(item.price || '-', 12);
+                    table += `│ ${padRight((i + 1).toString(), 2)} │ ${padRight(desc, 40)} │ ${padRight(qty, 8)} │ ${padRight(price, 12)} │\n`;
                 });
-                table += '╚══════╩═══════════════════════════════════════════╩══════════╩═══════════╝\n';
+                table += '└────┴──────────────────────────────────────────┴──────────┴──────────────┘\n';
             }
+            
+            table += '\n─────────────────────────────────────────────────────────────────────────\n';
+            table += `Generated by AI Invoice Processing | ${new Date().toLocaleDateString()}\n`;
             
             copyToClipboard(table);
         });
@@ -766,65 +759,77 @@
             downloadFile(csv, 'invoice_data.csv', 'text/csv');
         });
         
-        // 3. Export as Excel (Proper HTML table format for better Excel compatibility)
+        // 2. Export as Excel (Professional HTML table format)
         document.getElementById('exportExcelBtn').addEventListener('click', () => {
             if (!extractedData) return;
             
             const d = extractedData.data;
+            const date = new Date().toLocaleDateString();
             
-            // Create HTML table for Excel with better formatting
+            // Create professional Excel-compatible HTML
             let html = `
 <html xmlns:x="urn:schemas-microsoft-com:office:excel">
 <head>
     <meta charset="UTF-8">
     <style>
-        table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
-        th { background-color: #667eea; color: white; padding: 12px; text-align: left; font-weight: bold; border: 1px solid #ddd; }
-        td { padding: 10px; border: 1px solid #ddd; }
-        .header-row { background-color: #f0f2ff; font-weight: bold; }
-        .total-row { background-color: #fff9e6; font-weight: bold; }
-        .section-header { background-color: #667eea; color: white; font-weight: bold; padding: 10px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #667eea; font-size: 24px; margin-bottom: 5px; }
+        .header p { color: #666; font-size: 12px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+        th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px; 
+             text-align: left; font-weight: bold; border: 1px solid #555; font-size: 14px; }
+        td { padding: 12px; border: 1px solid #ddd; font-size: 13px; }
+        .field-col { background-color: #f8f9ff; font-weight: 600; width: 35%; color: #333; }
+        .value-col { background-color: white; color: #333; }
+        .total-row td { background-color: #fff9e6; font-weight: bold; font-size: 15px; }
+        .section-title { background: #667eea; color: white; padding: 12px; margin-top: 20px; 
+                         font-size: 16px; font-weight: bold; text-align: center; }
+        .line-item-header { background: #764ba2 !important; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd; 
+                  text-align: center; color: #999; font-size: 11px; }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>📄 INVOICE DETAILS</h1>
+        <p>Generated on ${date}</p>
+    </div>
+    
     <table>
-        <tr class="section-header">
-            <td colspan="2" style="font-size: 16px; text-align: center;">INVOICE DETAILS</td>
-        </tr>
-        <tr class="header-row">
-            <th style="width: 30%;">Field</th>
-            <th style="width: 70%;">Value</th>
+        <tr>
+            <th colspan="2" style="text-align: center; font-size: 15px;">INVOICE INFORMATION</th>
         </tr>
         <tr>
-            <td><strong>Vendor Name</strong></td>
-            <td>${d.vendor || 'Not Available'}</td>
+            <td class="field-col">Vendor Name</td>
+            <td class="value-col">${d.vendor || 'Not Available'}</td>
         </tr>
         <tr>
-            <td><strong>Invoice Number</strong></td>
-            <td>${d.invoice_number || 'Not Available'}</td>
+            <td class="field-col">Invoice Number</td>
+            <td class="value-col">${d.invoice_number || 'Not Available'}</td>
         </tr>
         <tr>
-            <td><strong>Invoice Date</strong></td>
-            <td>${d.date || 'Not Available'}</td>
+            <td class="field-col">Invoice Date</td>
+            <td class="value-col">${d.date || 'Not Available'}</td>
         </tr>
         <tr>
-            <td><strong>Subtotal</strong></td>
-            <td>${d.subtotal || 'Not Available'}</td>
+            <td class="field-col">Subtotal</td>
+            <td class="value-col">${d.subtotal || 'Not Available'}</td>
         </tr>
         <tr>
-            <td><strong>Tax Amount</strong></td>
-            <td>${d.tax || 'Not Available'}</td>
+            <td class="field-col">Tax Amount</td>
+            <td class="value-col">${d.tax || 'Not Available'}</td>
         </tr>
         <tr class="total-row">
-            <td><strong>TOTAL AMOUNT</strong></td>
-            <td><strong>${d.total || 'Not Available'}</strong></td>
+            <td class="field-col">TOTAL AMOUNT</td>
+            <td class="value-col">${d.total || 'Not Available'}</td>
         </tr>`;
             
             if (d.summary) {
                 html += `
         <tr>
-            <td><strong>Summary</strong></td>
-            <td>${d.summary}</td>
+            <td class="field-col">Summary</td>
+            <td class="value-col">${d.summary}</td>
         </tr>`;
             }
             
@@ -833,25 +838,23 @@
             
             if (d.line_items && d.line_items.length > 0) {
                 html += `
-    <br><br>
-    <table>
-        <tr class="section-header">
-            <td colspan="3" style="font-size: 16px; text-align: center;">LINE ITEMS</td>
-        </tr>
-        <tr class="header-row">
-            <th style="width: 10%;">#</th>
-            <th style="width: 60%;">Description</th>
-            <th style="width: 15%;">Quantity</th>
-            <th style="width: 15%;">Price</th>
+    <div class="section-title">LINE ITEMS</div>
+    <table style="margin-top: 10px;">
+        <tr class="line-item-header">
+            <th style="width: 8%; text-align: center;">#</th>
+            <th style="width: 55%;">Description</th>
+            <th style="width: 17%; text-align: center;">Quantity</th>
+            <th style="width: 20%; text-align: right;">Price</th>
         </tr>`;
                 
                 d.line_items.forEach((item, i) => {
+                    const bgColor = i % 2 === 0 ? '#ffffff' : '#f8f9ff';
                     html += `
         <tr>
-            <td>${i + 1}</td>
-            <td>${item.description || 'Item'}</td>
-            <td>${item.quantity || '-'}</td>
-            <td>${item.price || '-'}</td>
+            <td style="background-color: ${bgColor}; text-align: center; font-weight: 600;">${i + 1}</td>
+            <td style="background-color: ${bgColor};">${item.description || 'Item'}</td>
+            <td style="background-color: ${bgColor}; text-align: center;">${item.quantity || '-'}</td>
+            <td style="background-color: ${bgColor}; text-align: right; font-weight: 600;">${item.price || '-'}</td>
         </tr>`;
                 });
                 
@@ -860,19 +863,17 @@
             }
             
             html += `
+    <div class="footer">
+        Generated by AI Invoice Processing System<br>
+        Powered by Google Gemini AI • OCR.space
+    </div>
 </body>
 </html>`;
             
             downloadFile(html, 'invoice_data.xls', 'application/vnd.ms-excel');
         });
         
-        // 4. Download JSON
-        document.getElementById('downloadJSONBtn').addEventListener('click', () => {
-            if (!extractedData) return;
-            
-            const json = JSON.stringify(extractedData, null, 2);
-            downloadFile(json, 'invoice_data.json', 'application/json');
-        });
+        // 3. Download JSON - REMOVED (keeping only Copy Table and Export Excel)
         
         // Helper: Copy to clipboard
         function copyToClipboard(text) {
