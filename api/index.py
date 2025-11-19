@@ -135,7 +135,12 @@ def process_invoice():
             'data': {
                 'vendor': result['vendor'],
                 'date': result['date'],
-                'total': result['total']
+                'total': result['total'],
+                'invoice_number': result.get('invoice_number'),
+                'tax': result.get('tax'),
+                'subtotal': result.get('subtotal'),
+                'summary': result.get('summary'),
+                'line_items': result.get('line_items', [])
             }
         }), 200
     

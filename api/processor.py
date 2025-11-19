@@ -1,21 +1,21 @@
 """
 Invoice Data Extraction Module
-Handles OCR processing and intelligent data extraction from invoice images.
+Handles OCR processing and intelligent data extraction from invoice images using AI.
 """
 
 import re
 import os
 import requests
-from fuzzywuzzy import process
+import json
 
 
 def extract_invoice_data(image_path, known_vendors=None, ocr_api_key=None):
     """
-    Extract key invoice information from an image using OCR and pattern matching.
+    Extract key invoice information from an image using OCR and AI.
     
     Args:
         image_path (str): Path to the invoice image file
-        known_vendors (list, optional): Legacy parameter, not used with NLP extraction
+        known_vendors (list, optional): Legacy parameter, not used with AI extraction
         ocr_api_key (str, optional): OCR.space API key. If not provided, uses env variable.
     
     Returns:
@@ -42,20 +42,121 @@ def extract_invoice_data(image_path, known_vendors=None, ocr_api_key=None):
             'error': f'OCR failed: {str(e)}'
         }
     
-    # Extract vendor name using NLP
+    # Try AI-powered extraction first
+    ai_result = extract_with_ai(raw_text)
+    if ai_result:
+        return ai_result
+    
+    # Fallback to regex-based extraction
     vendor = extract_vendor_nlp(raw_text)
-    
-    # Extract invoice date using regex
     date = extract_date(raw_text)
-    
-    # Extract total amount using regex
     total = extract_total(raw_text)
     
     return {
         'vendor': vendor,
         'date': date,
-        'total': total
+        'total': total,
+        'invoice_number': None,
+        'tax': None,
+        'subtotal': None,
+        'summary': None,
+        'line_items': []
     }
+
+
+def extract_with_ai(text):
+    """
+    Use Google's Gemini AI to extract invoice data intelligently.
+    
+    Args:
+        text (str): Raw OCR text from invoice
+    
+    Returns:
+        dict: Extracted data or None if AI extraction fails
+    """
+    try:
+        # Get Gemini API key from environment
+        api_key = os.environ.get('GEMINI_API_KEY')
+        if not api_key:
+            return None  # Fallback to regex if no API key
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+        
+        prompt = f"""You are an expert invoice data extraction system. Extract the following information from this invoice text:
+
+1. Vendor/Company Name (the business issuing the invoice)
+2. Invoice Date (in original format)
+3. Total Amount (with currency symbol - keep €, $, £, ¥, etc.)
+4. Invoice Number (if present)
+5. Tax Amount (if present, with currency symbol)
+6. Subtotal (amount before tax, with currency symbol)
+7. Summary (1-2 sentence description of what this invoice is for)
+8. Line Items (list of main items/services with quantities and prices if available)
+
+Invoice Text:
+{text}
+
+Respond ONLY with a valid JSON object in this exact format:
+{{
+  "vendor": "Company Name",
+  "date": "MM/DD/YYYY",
+  "total": "$XXX.XX",
+  "invoice_number": "INV-12345",
+  "tax": "$XX.XX",
+  "subtotal": "$XXX.XX",
+  "summary": "Brief description of invoice purpose",
+  "line_items": [
+    {{"description": "Item name", "quantity": "X", "price": "$XX.XX"}},
+    {{"description": "Service name", "quantity": "X", "price": "$XX.XX"}}
+  ]
+}}
+
+If you cannot find a field, use null. Keep currency symbols with amounts. For line_items, extract up to 5 main items.
+"""
+
+        payload = {
+            "contents": [{
+                "parts": [{
+                    "text": prompt
+                }]
+            }],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": 800
+            }
+        }
+        
+        response = requests.post(url, json=payload, timeout=15)
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            # Extract the generated text
+            if 'candidates' in result and len(result['candidates']) > 0:
+                generated_text = result['candidates'][0]['content']['parts'][0]['text']
+                
+                # Parse JSON from response
+                # Remove markdown code blocks if present
+                generated_text = generated_text.replace('```json', '').replace('```', '').strip()
+                
+                data = json.loads(generated_text)
+                
+                return {
+                    'vendor': data.get('vendor'),
+                    'date': data.get('date'),
+                    'total': data.get('total'),
+                    'invoice_number': data.get('invoice_number'),
+                    'tax': data.get('tax'),
+                    'subtotal': data.get('subtotal'),
+                    'summary': data.get('summary'),
+                    'line_items': data.get('line_items', [])
+                }
+        
+        return None
+        
+    except Exception as e:
+        print(f"AI extraction failed: {e}")
+        return None
 
 
 def perform_ocr(image_path, api_key):
@@ -104,26 +205,16 @@ def perform_ocr(image_path, api_key):
 
 def extract_vendor(text, known_vendors):
     """
-    Find the best matching vendor name from the text using fuzzy matching.
-    DEPRECATED: Use extract_vendor_nlp() instead for intelligent extraction.
+    DEPRECATED: Legacy function for fuzzy matching.
+    Use extract_vendor_nlp() or extract_with_ai() instead.
     
     Args:
         text (str): Raw OCR text
         known_vendors (list): List of known vendor names
     
     Returns:
-        str: Best matching vendor name or None
+        str: None (deprecated)
     """
-    if not known_vendors or not text:
-        return None
-    
-    # Use fuzzywuzzy to find the best match
-    # extractOne returns (best_match, score)
-    result = process.extractOne(text, known_vendors)
-    
-    if result and result[1] >= 60:  # 60% confidence threshold
-        return result[0]
-    
     return None
 
 

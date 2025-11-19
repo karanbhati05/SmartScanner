@@ -246,6 +246,77 @@
             color: white;
         }
 
+        .result-item.highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .result-item.highlight .result-label,
+        .result-item.highlight .result-value {
+            color: white;
+        }
+
+        .summary-section {
+            margin-top: 20px;
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .summary-section.show {
+            display: block;
+        }
+
+        .summary-title {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .summary-text {
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .line-items-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .line-items-section.show {
+            display: block;
+        }
+
+        .line-item {
+            background: #f8f9ff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .line-item-desc {
+            color: #333;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .line-item-qty {
+            color: #666;
+            margin: 0 10px;
+            font-size: 13px;
+        }
+
+        .line-item-price {
+            color: #667eea;
+            font-weight: 600;
+        }
+
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -291,18 +362,47 @@
 
         <div class="results" id="results">
             <h2 class="results-title">✨ Extracted Data</h2>
+            
             <div class="result-item">
                 <span class="result-label">Vendor</span>
                 <span class="result-value" id="vendorValue">-</span>
             </div>
+            
+            <div class="result-item">
+                <span class="result-label">Invoice #</span>
+                <span class="result-value" id="invoiceNumberValue">-</span>
+            </div>
+            
             <div class="result-item">
                 <span class="result-label">Date</span>
                 <span class="result-value" id="dateValue">-</span>
             </div>
+            
             <div class="result-item">
+                <span class="result-label">Subtotal</span>
+                <span class="result-value" id="subtotalValue">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Tax</span>
+                <span class="result-value" id="taxValue">-</span>
+            </div>
+            
+            <div class="result-item highlight">
                 <span class="result-label">Total</span>
                 <span class="result-value" id="totalValue">-</span>
             </div>
+            
+            <div class="summary-section" id="summarySection">
+                <h3 class="summary-title">📋 Summary</h3>
+                <p class="summary-text" id="summaryText">-</p>
+            </div>
+            
+            <div class="line-items-section" id="lineItemsSection">
+                <h3 class="summary-title">🛒 Line Items</h3>
+                <div id="lineItemsList"></div>
+            </div>
+            
             <button class="reset-btn" id="resetBtn">Upload Another Invoice</button>
         </div>
 
@@ -326,6 +426,13 @@
         const vendorValue = document.getElementById('vendorValue');
         const dateValue = document.getElementById('dateValue');
         const totalValue = document.getElementById('totalValue');
+        const invoiceNumberValue = document.getElementById('invoiceNumberValue');
+        const taxValue = document.getElementById('taxValue');
+        const subtotalValue = document.getElementById('subtotalValue');
+        const summarySection = document.getElementById('summarySection');
+        const summaryText = document.getElementById('summaryText');
+        const lineItemsSection = document.getElementById('lineItemsSection');
+        const lineItemsList = document.getElementById('lineItemsList');
 
         let selectedFile = null;
 
@@ -408,11 +515,46 @@
                     vendorValue.textContent = data.data.vendor || 'Not found';
                     vendorValue.className = data.data.vendor ? 'result-value' : 'result-value empty';
                     
+                    invoiceNumberValue.textContent = data.data.invoice_number || 'Not found';
+                    invoiceNumberValue.className = data.data.invoice_number ? 'result-value' : 'result-value empty';
+                    
                     dateValue.textContent = data.data.date || 'Not found';
                     dateValue.className = data.data.date ? 'result-value' : 'result-value empty';
                     
+                    subtotalValue.textContent = data.data.subtotal || 'Not found';
+                    subtotalValue.className = data.data.subtotal ? 'result-value' : 'result-value empty';
+                    
+                    taxValue.textContent = data.data.tax || 'Not found';
+                    taxValue.className = data.data.tax ? 'result-value' : 'result-value empty';
+                    
                     totalValue.textContent = data.data.total || 'Not found';
                     totalValue.className = data.data.total ? 'result-value' : 'result-value empty';
+                    
+                    // Show summary if available
+                    if (data.data.summary) {
+                        summaryText.textContent = data.data.summary;
+                        summarySection.classList.add('show');
+                    } else {
+                        summarySection.classList.remove('show');
+                    }
+                    
+                    // Show line items if available
+                    if (data.data.line_items && data.data.line_items.length > 0) {
+                        lineItemsList.innerHTML = '';
+                        data.data.line_items.forEach(item => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'line-item';
+                            itemDiv.innerHTML = `
+                                <span class="line-item-desc">${item.description || 'Item'}</span>
+                                <span class="line-item-qty">Qty: ${item.quantity || '-'}</span>
+                                <span class="line-item-price">${item.price || '-'}</span>
+                            `;
+                            lineItemsList.appendChild(itemDiv);
+                        });
+                        lineItemsSection.classList.add('show');
+                    } else {
+                        lineItemsSection.classList.remove('show');
+                    }
                     
                     results.classList.add('show');
                 } else {
