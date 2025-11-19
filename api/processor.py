@@ -85,8 +85,8 @@ def extract_with_ai(text):
         
         print(f"Using Gemini AI with key: {api_key[:10]}...")
         
-        # Updated Gemini API endpoint
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+        # Gemini API endpoint - using gemini-2.5-flash (latest stable model)
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={api_key}"
         
         prompt = f"""You are an expert invoice data extraction system. Extract the following information from this invoice text:
 
