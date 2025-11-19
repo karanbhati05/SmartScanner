@@ -246,6 +246,57 @@
             color: white;
         }
 
+        .export-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .export-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .export-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+        }
+
         .result-item.highlight {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
@@ -424,8 +475,25 @@
                 <div id="lineItemsList"></div>
             </div>
             
+            <div class="export-buttons">
+                <button class="export-btn" id="copyTableBtn" title="Copy as table format">
+                    📋 Copy Table
+                </button>
+                <button class="export-btn" id="exportCSVBtn" title="Download as CSV spreadsheet">
+                    📊 Export CSV
+                </button>
+                <button class="export-btn" id="exportExcelBtn" title="Download as Excel spreadsheet">
+                    📈 Export Excel
+                </button>
+                <button class="export-btn" id="downloadJSONBtn" title="Download raw JSON data">
+                    💾 Download JSON
+                </button>
+            </div>
+            
             <button class="reset-btn" id="resetBtn">Upload Another Invoice</button>
         </div>
+
+        <div class="copy-feedback" id="copyFeedback">✓ Copied to clipboard!</div>
 
         <div class="footer">
             Powered by <a href="https://ocr.space" target="_blank">OCR.space</a> • 
@@ -457,6 +525,7 @@
         const aiBadge = document.getElementById('aiBadge');
 
         let selectedFile = null;
+        let extractedData = null; // Store extracted data for export
 
         // Click to upload
         uploadArea.addEventListener('click', () => fileInput.click());
@@ -533,6 +602,9 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Store extracted data for export
+                    extractedData = data;
+                    
                     // Show AI status badge
                     if (data.ai_enabled) {
                         aiBadge.textContent = '🤖 AI-Powered Extraction';
@@ -613,6 +685,131 @@
         function showError(message) {
             error.textContent = message;
             error.classList.add('show');
+        }
+
+        // Export Functions
+        
+        // 1. Copy as Table
+        document.getElementById('copyTableBtn').addEventListener('click', () => {
+            if (!extractedData) return;
+            
+            const d = extractedData.data;
+            let table = 'INVOICE DATA\n';
+            table += '━'.repeat(50) + '\n\n';
+            table += `Vendor:         ${d.vendor || 'N/A'}\n`;
+            table += `Invoice #:      ${d.invoice_number || 'N/A'}\n`;
+            table += `Date:           ${d.date || 'N/A'}\n`;
+            table += `Subtotal:       ${d.subtotal || 'N/A'}\n`;
+            table += `Tax:            ${d.tax || 'N/A'}\n`;
+            table += `Total:          ${d.total || 'N/A'}\n\n`;
+            
+            if (d.summary) {
+                table += `Summary:        ${d.summary}\n\n`;
+            }
+            
+            if (d.line_items && d.line_items.length > 0) {
+                table += 'LINE ITEMS\n';
+                table += '─'.repeat(50) + '\n';
+                d.line_items.forEach((item, i) => {
+                    table += `${i + 1}. ${item.description || 'Item'}\n`;
+                    table += `   Quantity: ${item.quantity || 'N/A'}  |  Price: ${item.price || 'N/A'}\n`;
+                });
+            }
+            
+            copyToClipboard(table);
+        });
+        
+        // 2. Export as CSV
+        document.getElementById('exportCSVBtn').addEventListener('click', () => {
+            if (!extractedData) return;
+            
+            const d = extractedData.data;
+            let csv = 'Field,Value\n';
+            csv += `Vendor,"${(d.vendor || '').replace(/"/g, '""')}"\n`;
+            csv += `Invoice Number,"${(d.invoice_number || '').replace(/"/g, '""')}"\n`;
+            csv += `Date,"${(d.date || '').replace(/"/g, '""')}"\n`;
+            csv += `Subtotal,"${(d.subtotal || '').replace(/"/g, '""')}"\n`;
+            csv += `Tax,"${(d.tax || '').replace(/"/g, '""')}"\n`;
+            csv += `Total,"${(d.total || '').replace(/"/g, '""')}"\n`;
+            csv += `Summary,"${(d.summary || '').replace(/"/g, '""')}"\n\n`;
+            
+            if (d.line_items && d.line_items.length > 0) {
+                csv += '\nLine Items\n';
+                csv += 'Description,Quantity,Price\n';
+                d.line_items.forEach(item => {
+                    csv += `"${(item.description || '').replace(/"/g, '""')}",`;
+                    csv += `"${(item.quantity || '').replace(/"/g, '""')}",`;
+                    csv += `"${(item.price || '').replace(/"/g, '""')}"\n`;
+                });
+            }
+            
+            downloadFile(csv, 'invoice_data.csv', 'text/csv');
+        });
+        
+        // 3. Export as Excel (TSV format for Excel compatibility)
+        document.getElementById('exportExcelBtn').addEventListener('click', () => {
+            if (!extractedData) return;
+            
+            const d = extractedData.data;
+            let tsv = 'Field\tValue\n';
+            tsv += `Vendor\t${d.vendor || ''}\n`;
+            tsv += `Invoice Number\t${d.invoice_number || ''}\n`;
+            tsv += `Date\t${d.date || ''}\n`;
+            tsv += `Subtotal\t${d.subtotal || ''}\n`;
+            tsv += `Tax\t${d.tax || ''}\n`;
+            tsv += `Total\t${d.total || ''}\n`;
+            tsv += `Summary\t${d.summary || ''}\n\n`;
+            
+            if (d.line_items && d.line_items.length > 0) {
+                tsv += '\nLine Items\n';
+                tsv += 'Description\tQuantity\tPrice\n';
+                d.line_items.forEach(item => {
+                    tsv += `${item.description || ''}\t${item.quantity || ''}\t${item.price || ''}\n`;
+                });
+            }
+            
+            downloadFile(tsv, 'invoice_data.xls', 'application/vnd.ms-excel');
+        });
+        
+        // 4. Download JSON
+        document.getElementById('downloadJSONBtn').addEventListener('click', () => {
+            if (!extractedData) return;
+            
+            const json = JSON.stringify(extractedData, null, 2);
+            downloadFile(json, 'invoice_data.json', 'application/json');
+        });
+        
+        // Helper: Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const feedback = document.getElementById('copyFeedback');
+                feedback.classList.add('show');
+                setTimeout(() => feedback.classList.remove('show'), 2000);
+            }).catch(err => {
+                showError('Failed to copy to clipboard');
+                console.error(err);
+            });
+        }
+        
+        // Helper: Download file
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            const feedback = document.getElementById('copyFeedback');
+            feedback.textContent = `✓ Downloaded ${filename}!`;
+            feedback.classList.add('show');
+            setTimeout(() => {
+                feedback.classList.remove('show');
+                feedback.textContent = '✓ Copied to clipboard!';
+            }, 2000);
         }
     </script>
 </body>
