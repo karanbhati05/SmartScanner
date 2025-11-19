@@ -115,6 +115,9 @@ def process_invoice():
         # Extract invoice data with OCR API key (no vendor list needed)
         result = extract_invoice_data(temp_path, None, OCR_API_KEY)
         
+        # Add extraction method info
+        extraction_method = 'ai' if os.environ.get('GEMINI_API_KEY') else 'regex'
+        
         # Clean up temporary file
         try:
             os.unlink(temp_path)
@@ -132,6 +135,8 @@ def process_invoice():
         # Return successful response
         return jsonify({
             'success': True,
+            'extraction_method': extraction_method,
+            'ai_enabled': extraction_method == 'ai',
             'data': {
                 'vendor': result['vendor'],
                 'date': result['date'],

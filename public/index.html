@@ -317,6 +317,26 @@
             font-weight: 600;
         }
 
+        .ai-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .ai-badge.enabled {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+        }
+
+        .ai-badge.disabled {
+            background: #f0f0f0;
+            color: #666;
+        }
+
         .footer {
             text-align: center;
             margin-top: 30px;
@@ -361,6 +381,7 @@
         <div class="error" id="error"></div>
 
         <div class="results" id="results">
+            <div class="ai-badge" id="aiBadge"></div>
             <h2 class="results-title">✨ Extracted Data</h2>
             
             <div class="result-item">
@@ -433,6 +454,7 @@
         const summaryText = document.getElementById('summaryText');
         const lineItemsSection = document.getElementById('lineItemsSection');
         const lineItemsList = document.getElementById('lineItemsList');
+        const aiBadge = document.getElementById('aiBadge');
 
         let selectedFile = null;
 
@@ -511,6 +533,15 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Show AI status badge
+                    if (data.ai_enabled) {
+                        aiBadge.textContent = '🤖 AI-Powered Extraction';
+                        aiBadge.className = 'ai-badge enabled';
+                    } else {
+                        aiBadge.textContent = '⚙️ Regex-Based Extraction (Add GEMINI_API_KEY for AI)';
+                        aiBadge.className = 'ai-badge disabled';
+                    }
+                    
                     // Show results
                     vendorValue.textContent = data.data.vendor || 'Not found';
                     vendorValue.className = data.data.vendor ? 'result-value' : 'result-value empty';
